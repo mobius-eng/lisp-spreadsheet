@@ -8,8 +8,8 @@
 (in-package :lisp-spreadsheet-test-asd)
 
 (defsystem lisp-spreadsheet-test
-  :author ""
-  :license ""
+  :author "Alexey Cherkaev"
+  :license "BSD"
   :depends-on (:lisp-spreadsheet
                :prove)
   :components ((:module "t"

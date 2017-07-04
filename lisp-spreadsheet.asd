@@ -9,8 +9,8 @@
 
 (defsystem lisp-spreadsheet
   :version "0.1"
-  :author ""
-  :license ""
+  :author "Alexey Cherkaev"
+  :license "BSD"
   :depends-on ("qtools" "qtgui" "qtcore")
   :components ((:module "src"
                 :components
