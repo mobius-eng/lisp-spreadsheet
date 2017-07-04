@@ -373,12 +373,12 @@
     (make-instance 'spreadsheet
       :cols-number 10
       :rows-number 20
-      :cell-reader (lambda (x) (read-from-string (format nil "~A" x)))
+      :cell-reader (lambda (x) (read-from-string (format nil "#$~A$" x)))
       :cell-evaluator #'eval
       :cell-formatter (lambda (x)
                         (with-output-to-string (s)
                           (let ((*standard-output* s))
-                            (format t "~A" x)))))
+                            (maxima::displa x)))))
   (q+:set-parent spreadsheet spreadsheet-window)
   (q+:set-font spreadsheet (q+:make-qfont "Monospace")))
 

@@ -77,10 +77,11 @@ In more or less priority order:
 - [X] Change cell presentation on keys [I], [O], [V] in editing mode
 - [X] Update cell visual on presentation change
 
-*** MAXIMA integration [1/3]
+*** MAXIMA integration [3/3]
 - [X] It can be loaded into MAXIMA
-- [ ] Implement wrappers for =cell= in MAXIMA
-- [ ] Put MAXIMA changes into a separate branch
+- [X] Implement wrappers for =cell= in MAXIMA
+- [X] Put MAXIMA changes into a separate branch
+- [ ] Make MAXIMA REPL available
 
 ** Notes
 There can be only *ONE* working instance of the spreadsheet
