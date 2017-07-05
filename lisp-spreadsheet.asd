@@ -11,7 +11,7 @@
   :version "0.1"
   :author "Alexey Cherkaev"
   :license "BSD"
-  :depends-on ("qtools" "qtgui" "qtcore")
+  :depends-on ("qtools" "qtgui" "qtcore" "qtools-ui-repl" "vom")
   :components ((:module "src"
                 :components
                 ((:file "lisp-spreadsheet"))))
