@@ -1,6 +1,6 @@
 * Lisp-Spreadsheet 
 
-[[file:lisp-spreadsheet-screenshot.png]]
+[[file:lisp-spreadsheet-maxima.png]]
 
 ** Why spreadsheet?
 
@@ -73,10 +73,13 @@ In more or less priority order:
 - [X] Make reader, evaluator and formatter easier to customize
 - [X] Add REPL (QT-GUI-REPL)
 - [X] Handle errors in inputs
+- [ ] Document functions
+- [ ] Make compound widget exportable
 - [ ] Resolve cell dependecies
 - [X] Change cell presentation on keys [I], [O], [V] in editing mode
 - [X] Update cell visual on presentation change
 - [X] Save and load spreadsheet
+- [ ] Keep cell presentation mode in saved data
 
 *** MAXIMA integration [4/5]
 - [X] It can be loaded into MAXIMA
@@ -105,6 +108,7 @@ all the cells in some (specified or unspecified) order.
 
 ** Installation
 
+*** LISP
 Clone this repo into =quicklisp/local-projects= directory. From there 
 #+BEGIN_SRC lisp
   (ql:quickload "lisp-spreadsheet")
@@ -117,6 +121,15 @@ Qt infrastructure to be properly installed.
 Was tested to work on Ubuntu 16.10 with SBCL 1.3.19. On Windows 10,
 AFAIK, there is a problem of loading (old) Qt 4.x libraries, but it
 /should/ work on Windows 7.
+
+*** MAXIMA
+The full MAXIMA installation is a bit more complicated due to the fact
+that MAXIMA's default binaries do not support ASDF3. So, the best way
+to proceed is to compile MAXIMA from sources. To get ASDF3 loaded,
+include =(require :asdf)= into =.sbclrc= file. After compilation, make
+sure =ASDF3= is enabled by checking features in MAXIMA: =:lisp
+*features*=. Then, treat MAXIMA's LISP core as normal LISP, install
+Quicklisp and follow LISP installation instructions.
 
 ** Disclaimer
 
