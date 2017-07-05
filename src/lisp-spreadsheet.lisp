@@ -2,12 +2,26 @@
 ;; ** Preambule
 (in-package :cl-user)
 
+;; Create a phony MAXIMA package
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (unless (find-package 'maxima)
+    (make-package "MAXIMA")))
+
 (defpackage lisp-spreadsheet
-  (:use :cl+qt :qtools-ui))
+  (:use :cl+qt :qtools-ui)
+  (:export
+   #:cell
+   #:recalculate-spreadsheet
+   #:refresh-spreadsheet
+   #:save-spreadsheet
+   #:load-spreadsheet
+   #:run-spreadsheet))
 
 (in-package :lisp-spreadsheet)
 
 (in-readtable :qtools)
+
+;; ** Compatability between LISP and MAXIMA
 
 ;; ** Internal data representation
 ;; *** DEFAULT-OUTPUT-FORMATTER
@@ -79,20 +93,22 @@
       cell
     (if (or (null new-input) (= (length new-input) 0))
         (setf input "" value nil output "" empty-p t)
-        (handler-case
-            (let* ((input-expression (funcall reader new-input))
-                   (new-value (funcall evaluator input-expression))
-                   (new-output (funcall formatter new-value)))
-              (setf input new-input value new-value output new-output empty-p nil))
-          (reader-error ()
-            (vom:error "Error in reader on ~S" new-input))
-          (stream-error ()
-            (vom:error "Error while consuming a string ~S" new-input))
-          (error ()
-            (vom:error "Unknown error while reading/evaluating ~S" new-input))))
+        (catch 'maxima::macsyma-quit
+          (handler-case
+              (let* ((input-expression (funcall reader new-input))
+                     (new-value (funcall evaluator input-expression))
+                     (new-output (funcall formatter new-value)))
+                (setf input new-input value new-value output new-output empty-p nil))
+            (reader-error ()
+              (vom:error "Error in reader on ~S" new-input))
+            (stream-error ()
+              (vom:error "Error while consuming a string ~S" new-input))
+            (error ()
+              (vom:error "Unknown error while reading/evaluating ~S" new-input)))))
     value))
 
-;; *** presentation
+
+;; *** CELL-DATA-PRESENTATION
 (defmethod cell-data-presentation ((cell cell-data))
   (with-slots (presentation-mode input output value) cell
     (case presentation-mode
@@ -362,23 +378,81 @@
                          (1- row)
                          (1- col))))
 
+;; *** Serialize
+(defun serialize-spreadsheet-data (data)
+  (destructuring-bind (rows cols) (array-dimensions data)
+    (let (tmp)
+      (loop for i from 0 below rows
+         do (setf tmp (loop for j from 0 below cols
+                         unless (cell-data-empty-p (aref data i j))
+                         collect (list i j (cell-data-input (aref data i j)))))
+         when tmp
+         collect tmp into result
+         finally (return (mapcan #'identity result))))))
+
+;; *** Re-calculate spreadsheet
+(defun recalculate-spreadsheet (&optional (spreadsheet *current-spreadsheet*))
+  (with-slots (rows-number cols-number data) spreadsheet
+    (dotimes (i rows-number)
+      (dotimes (j cols-number)
+        (unless (cell-data-empty-p (aref data i j))
+          (process-input (aref data i j) (cell-data-input (aref data i j)))
+          (update-cell-text spreadsheet i j))))))
+
+(defun refresh-spreadsheet (&optional (spreadsheet *current-spreadsheet*))
+  (with-slots (rows-number cols-number data) spreadsheet
+    (dotimes (i rows-number)
+      (dotimes (j cols-number)
+        (unless (cell-data-empty-p (aref data i j))
+          (update-cell-text spreadsheet i j))))))
+
+(defun load-spreadsheet-data (data serialized-data)
+  (loop for (i j input) in serialized-data
+     do (process-input (aref data i j) input)))
+
+(defun save-spreadsheet (file-name &optional (spreadsheet *current-spreadsheet*))
+  (with-open-file (out  file-name
+                        :direction :output
+                        :if-exists :supersede
+                        :if-does-not-exist :create)
+    (prin1 (serialize-spreadsheet-data (spreadsheet-data spreadsheet)) out))
+  :done)
+
+(defun load-spreadsheet (file-name &optional (spreadsheet *current-spreadsheet*))
+  (with-open-file (in file-name
+                      :direction :input)
+    (load-spreadsheet-data (spreadsheet-data spreadsheet) (read in)))
+  (refresh-spreadsheet spreadsheet))
+
 ;; ** Demo
 ;; (defvar *h* (make-hash-table :test 'equal))
 
 (define-widget spreadsheet-window (QWidget)
   ())
 
+(defun make-maxima-lisp-reader ()
+  "Automatically produces LISP or MAXIMA reader depending on wether
+  MAXIMA package properly exists"
+  (if (and (find-package "MAXIMA") (find-symbol "$MAP" "MAXIMA"))
+      (lambda (x) (read-from-string (format nil "#$~A$" x)))
+      (lambda (x) (read-from-string x))))
+
+(defun make-maxima-lisp-formatter ()
+  (if (and (find-package "MAXIMA") (find-symbol "$MAP" "MAXIMA"))
+      (lambda (x)
+        (with-output-to-string (s)
+          (let ((*standard-output* s))
+            (funcall (symbol-function (find-symbol "DISPLA" "MAXIMA")) x))))
+      (lambda (x) (format nil "~A" x))))
+
 ;; a bit of extra in read and formatter - to ease modification for MAXIMA
 (define-subwidget (spreadsheet-window spreadsheet)
     (make-instance 'spreadsheet
       :cols-number 10
       :rows-number 20
-      :cell-reader (lambda (x) (read-from-string (format nil "#$~A$" x)))
+      :cell-reader (make-maxima-lisp-reader)
       :cell-evaluator #'eval
-      :cell-formatter (lambda (x)
-                        (with-output-to-string (s)
-                          (let ((*standard-output* s))
-                            (maxima::displa x)))))
+      :cell-formatter (make-maxima-lisp-formatter))
   (q+:set-parent spreadsheet spreadsheet-window)
   (q+:set-font spreadsheet (q+:make-qfont "Monospace")))
 

@@ -66,7 +66,7 @@ Entering and exiting the editing mode of the cell will cause cell to
 re-evaluate its value.
 
 ** Future plans
-*** General [7/8]
+*** General [8/9]
 In more or less priority order:
 - [X] Reference cells and ranges
 - [X] Sort out empty cells
@@ -76,17 +76,25 @@ In more or less priority order:
 - [ ] Resolve cell dependecies
 - [X] Change cell presentation on keys [I], [O], [V] in editing mode
 - [X] Update cell visual on presentation change
+- [X] Save and load spreadsheet
 
-*** MAXIMA integration [3/3]
+*** MAXIMA integration [4/5]
 - [X] It can be loaded into MAXIMA
 - [X] Implement wrappers for =cell= in MAXIMA
 - [X] Put MAXIMA changes into a separate branch
+- [X] MAXIMA and LISP implementations are integrated
 - [ ] Make MAXIMA REPL available
 
 ** Notes
 There can be only *ONE* working instance of the spreadsheet
 (at least in one thread, but it hasn't been tested with multiple
 threads).
+
+MAXIMA REPL appeared to be a bit more complicated. As a workaround, in
+REPL, wrap input in MAXIMA reader macros =#$= and =$=. To display
+MAXIMA output use =DISPLA= function. The REPL currently doesn't
+capture MAXIMA's standard output, so the output of =DISPLA= will be
+sent into terminal/Emacs.
 
 Cell dependencies is a tricky one as each cell can contain /any/ LISP
 expression. For example, =(DEFVAR *X* 10)=. Then, if somewhere =(SETF
