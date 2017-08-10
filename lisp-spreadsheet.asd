@@ -12,9 +12,12 @@
   :author "Alexey Cherkaev"
   :license "BSD"
   :depends-on ("qtools" "qtgui" "qtcore" "qtools-ui-repl" "vom")
-  :components ((:module "src"
+  :components ((:module
+                "src"
+                :serial t
                 :components
-                ((:file "lisp-spreadsheet"))))
+                ((:file "package")
+                 (:file "lisp-spreadsheet"))))
   :description ""
   :long-description
   #.(with-open-file (stream (merge-pathnames
